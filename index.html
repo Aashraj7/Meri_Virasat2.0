@@ -1155,6 +1155,13 @@ async function deleteHeritageRecord(id){
   await loadAdminRecords(); // Refresh admin list
   if(typeof renderCategoryShowcase === 'function') renderCategoryShowcase(); // Refresh website grid
 }
+ // Force-populate category dropdown on load
+window.addEventListener('DOMContentLoaded', () => {
+  const select = document.getElementById('f_category');
+  if (select && typeof HERITAGE_CATEGORIES !== 'undefined') {
+    select.innerHTML = HERITAGE_CATEGORIES.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+  }
+});
     
 </script>
     <!-- Admin Dashboard Modal -->
