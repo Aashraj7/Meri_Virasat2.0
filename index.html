@@ -1160,7 +1160,46 @@ async function deleteHeritageRecord(id){
   await loadAdminRecords(); // Refresh list
   if(typeof renderCategoryShowcase === 'function') renderCategoryShowcase();
 }
-    
+  // Fetch published heritage records from Supabase on page load
+async function loadPublishedHeritage(){
+  if(!sb) return;
+  const { data, error } = await sb.from('heritage').select('*').eq('status', 'published').order('created_at', { ascending: false });
+  
+  if(error){
+    console.error('Failed to load heritage:', error.message);
+    return;
+  }
+
+  if(data && data.length > 0){
+    // Map database rows to frontend structure
+    HERITAGE = data.map(row => ({
+      id: row.id,
+      name: row.name,
+      category: row.category,
+      location: row.location,
+      description: row.description,
+      image: row.image_url || IMAGE_ASSETS.hero,
+      image_urls: row.image_urls || [],
+      audio_urls: row.audio_urls || [],
+      video_urls: row.video_urls || [],
+      risk: row.risk_score || 50,
+      lat: row.map_x ? Number(row.map_x) : null,
+      lng: row.map_y ? Number(row.map_y) : null
+    }));
+  } else {
+    HERITAGE = []; // Empty if database has no records yet
+  }
+
+  // Refresh UI components with real data
+  if(typeof renderCategoryShowcase === 'function') renderCategoryShowcase();
+  if(typeof renderMap === 'function') renderMap();
+}
+
+// Run on page load
+window.addEventListener('DOMContentLoaded', () => {
+  loadPublishedHeritage();
+});
+  
 </script>
     <!-- Admin Dashboard Modal -->
 <div id="adminModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
