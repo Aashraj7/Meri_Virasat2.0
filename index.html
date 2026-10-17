@@ -1009,33 +1009,72 @@ function renderMap(){
   });
 }
 
-const originalSubmitHeritage = submitHeritage;
-submitHeritage = async function(){
+async function submitHeritage(){
   if(!sb){ originalSubmitHeritage(); return; }
   if(!currentUser){ openAuthModal(); showToast('Please sign in before submitting a heritage record.'); return; }
-  const name=document.getElementById('f_name').value.trim();
-  const category=document.getElementById('f_category').value;
-  const location=document.getElementById('f_location').value.trim();
-  const description=document.getElementById('f_desc').value.trim();
+  
+  const name = document.getElementById('f_name').value.trim();
+  const category = document.getElementById('f_category').value;
+  const location = document.getElementById('f_location').value.trim();
+  const description = document.getElementById('f_desc').value.trim();
+  
   if(!name || !location){ showToast('Please add the heritage name and location first.'); return; }
-  const risk=Number(window._lastRisk || 50);
-  let image_url=null;
+  
+  const risk = Number(window._lastRisk || 50);
+  let image_url = null;
+  
   if(window._selectedPhoto){
-    const file=window._selectedPhoto;
-    const safe=file.name.toLowerCase().replace(/[^a-z0-9._-]+/g,'-');
-    const path=`submissions/${currentUser.id}/${crypto.randomUUID()}-${safe}`;
-    const upload=await sb.storage.from('heritage-media').upload(path,file,{contentType:file.type,upsert:false});
-    if(upload.error){ showToast('Image upload failed: '+upload.error.message); return; }
-    image_url=sb.storage.from('heritage-media').getPublicUrl(path).data.publicUrl;
+    const file = window._selectedPhoto;
+    const safe = file.name.toLowerCase().replace(/[^a-z0-9._-]+/g,'-');
+    const path = `submissions/${currentUser.id}/${crypto.randomUUID()}-${safe}`;
+    const upload = await sb.storage.from('heritage-media').upload(path, file, {contentType: file.type, upsert: false});
+    if(upload.error){ showToast('Image upload failed: ' + upload.error.message); return; }
+    image_url = sb.storage.from('heritage-media').getPublicUrl(path).data.publicUrl;
   }
-  const payload={user_id:currentUser.id, heritage_name:name, category, location, description, risk_score:risk, image_url, status:'pending', metadata:{pin:pinCoord, dialect:window._lastDialect || null}};
-  const {data,error}=await sb.from('submissions').insert(payload).select().single();
-  if(error){ showToast('Could not submit: '+error.message); return; }
-  showToast(`"${name}" submitted for review. Reference #${data.id}.`);
-  step=1; showStep(1);
-  document.getElementById('f_name').value=''; document.getElementById('f_location').value=''; document.getElementById('f_desc').value='';
-};
 
+  const payload = {
+    user_id: currentUser.id,
+    name: name,
+    category: category,
+    location: location,
+    description: description,
+    history: description,
+    story: description,
+    risk_score: risk,
+    risk_label: risk >= 70 ? 'High Preservation Risk' : risk >= 45 ? 'Moderate Risk' : 'Low Risk',
+    theme: 'default',
+    image_url: image_url || IMAGE_ASSETS.hero,
+    map_x: pinCoord ? pinCoord.x : 50,
+    map_y: pinCoord ? pinCoord.y : 50,
+    status: 'published'
+  };
+
+  const { data, error } = await sb.from('heritage').insert(payload).select().single();
+  
+  if(error){ 
+    showToast('Could not publish: ' + error.message); 
+    return; 
+  }
+
+  showToast(`"${name}" is now live on the website!`);
+  
+  step = 1; showStep(1);
+  document.getElementById('f_name').value = ''; 
+  document.getElementById('f_location').value = ''; 
+  document.getElementById('f_desc').value = '';
+  uploads.photo = uploads.audio = uploads.video = false;
+  ['photo', 'audio', 'video'].forEach(t => { 
+    const el = document.getElementById(t + '_status'); 
+    el.classList.remove('text-teal', 'font-semibold'); 
+    el.textContent = t === 'audio' ? 'Oral story / folk song' : 'Tap to simulate upload'; 
+  });
+  document.getElementById('pinMarker').classList.add('hidden');
+  document.getElementById('pinHint').classList.remove('hidden');
+  document.getElementById('pinCoords').textContent = '';
+  pinCoord = null;
+
+  await loadPublishedHeritage();
+};
 const originalPhotoInput = document.getElementById('photoFile');
 if(originalPhotoInput){
   originalPhotoInput.addEventListener('change', async ()=>{
