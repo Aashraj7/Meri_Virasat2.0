@@ -169,14 +169,31 @@
       <div id="searchResults" class="hidden absolute mt-2 w-full bg-white border border-espresso/10 rounded-xl shadow-xl overflow-hidden max-h-72 overflow-y-auto z-50"></div>
     </div>
 
-    <button id="accountBtn" onclick="openAuthModal()" class="hidden sm:inline-flex items-center gap-2 border border-espresso/15 rounded-full px-3 py-2 text-xs font-semibold hover:border-terracotta hover:text-terracotta transition-colors"><i class="fa-solid fa-user"></i><span id="accountBtnText">Sign in</span></button><button id="adminNavBtn" onclick="openAdminDashboard()" class="hidden text-xs font-semibold bg-terracotta text-white px-3 py-1.5 rounded-lg hover:bg-terracotta2 transition-colors ml-2">
-  <i class="fa-solid fa-shield-halved mr-1"></i> Admin Dashboard
+    <button id="accountBtn" onclick="openAuthModal()" class="inline-flex items-center gap-2 border border-espresso/15 rounded-full px-3 py-2 text-xs font-semibold hover:border-terracotta hover:text-terracotta transition-colors">
+      <i class="fa-solid fa-user"></i><span id="accountBtnText">Sign in</span>
+    </button>
+
+    <!-- Top bar Admin Button (compact for mobile) -->
+    <button id="adminNavBtn" onclick="openAdminDashboard()" class="hidden text-xs font-semibold bg-terracotta text-white px-2.5 py-1.5 rounded-lg hover:bg-terracotta2 transition-colors ml-1 whitespace-nowrap">
+      <i class="fa-solid fa-shield-halved"></i> <span class="hidden sm:inline">Admin</span>
     </button>
       
     <button id="mobileMenuBtn" class="lg:hidden text-espresso text-xl px-1"><i class="fa-solid fa-bars"></i></button>
   </nav>
+
+  <!-- Mobile Dropdown Menu -->
   <div id="mobileMenu" class="hidden lg:hidden border-t border-espresso/10 px-4 py-3 flex flex-col gap-3 text-sm font-medium bg-sand">
-    <a href="#explore">Home</a><a href="#explore">Explore</a><a href="#categories">Categories</a><a href="#map">Artisans</a><a href="#stories">Stories</a><a href="#about">About</a><a href="#contact">Contact</a>
+    <a href="#explore">Home</a>
+    <a href="#explore">Explore</a>
+    <a href="#categories">Categories</a>
+    <a href="#map">Artisans</a>
+    <a href="#stories">Stories</a>
+    <a href="#about">About</a>
+    <a href="#contact">Contact</a>
+    <!-- Mobile Admin Button inside hamburger menu -->
+    <button id="mobileAdminBtn" onclick="openAdminDashboard()" class="hidden text-left font-semibold text-terracotta flex items-center gap-2 pt-2 border-t border-espresso/10">
+      <i class="fa-solid fa-shield-halved"></i> Admin Control Panel
+    </button>
   </div>
 </header>
 
@@ -930,6 +947,10 @@ function updateAuthUI(user){
   if(signOut) signOut.classList.toggle('hidden', !user);
   if(submit) submit.classList.toggle('hidden', !!user);
   if(title && user) title.textContent = 'Your account';
+  
+  // ADD THIS LINE:
+  checkAdminAccess();
+}
 }
 
 function openAuthModal(){
@@ -1139,17 +1160,22 @@ const heroObserver = new IntersectionObserver(entries=>{
 }, {threshold:.4});
 heroObserver.observe(document.querySelector('[data-count]').closest('.grid'));
 // PUT YOUR EXACT SUPABASE LOGIN EMAIL HERE:
-const ADMIN_EMAIL = 'onepercentbetterdaily549@gmail.com'; 
-
-// Check and show/hide admin button whenever auth state updates
 function checkAdminAccess(){
   const adminBtn = document.getElementById('adminNavBtn');
-  if(!adminBtn) return;
+  const mobileAdminBtn = document.getElementById('mobileAdminBtn');
 
-  if(currentUser && currentUser.email && currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()){
-    adminBtn.classList.remove('hidden');
-  } else {
-    adminBtn.classList.add('hidden');
+  const isAdmin = currentUser && 
+                  currentUser.email && 
+                  currentUser.email.trim().toLowerCase() === ADMIN_EMAIL.trim().toLowerCase();
+
+  if(adminBtn) {
+    if(isAdmin) adminBtn.classList.remove('hidden');
+    else adminBtn.classList.add('hidden');
+  }
+
+  if(mobileAdminBtn) {
+    if(isAdmin) mobileAdminBtn.classList.remove('hidden');
+    else mobileAdminBtn.classList.add('hidden');
   }
 }
 
