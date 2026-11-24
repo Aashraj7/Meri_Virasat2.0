@@ -1,0 +1,23 @@
+{
+  // Local development / build config for the Cloudflare Workers + D1 version.
+  // The D1 id below is a placeholder: local `wrangler dev` uses an on-disk
+  // SQLite file, and the hosted database is attached by the deploy platform.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "meri-virasat",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./build/public",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "meri-virasat",
+      "database_id": "00000000-0000-0000-0000-000000000000"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  }
+}

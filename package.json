@@ -1,0 +1,19 @@
+{
+  "name": "meri-virasat",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Meri Virasat — community heritage platform (static frontend, Node/SQLite or Cloudflare Workers + D1 backend)",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node --watch backend/server.js",
+    "build": "node scripts/build-worker.mjs",
+    "dev:worker": "npm run build && wrangler dev",
+    "check:worker": "wrangler deploy --dry-run --outdir dist --config wrangler.jsonc"
+  },
+  "engines": {
+    "node": ">=22.5"
+  },
+  "devDependencies": {
+    "wrangler": "^4.167.0"
+  }
+}
